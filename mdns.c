@@ -3,6 +3,8 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif
 
+#define _GNU_SOURCE 1
+#include <arpa/inet.h>
 #include <stdio.h>
 
 #include <errno.h>
@@ -184,7 +186,7 @@ service_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_ent
 	const char dns_sd[] = "_services._dns-sd._udp.local.";
 	const service_t* service = (const service_t*)user_data;
 
-	mdns_string_t fromaddrstr = ip_address_to_string(addrbuffer, sizeof(addrbuffer), from, addrlen);
+	// mdns_string_t fromaddrstr = ip_address_to_string(addrbuffer, sizeof(addrbuffer), from, addrlen);
 
 	size_t offset = name_offset;
 	mdns_string_t name = mdns_string_extract(data, size, &offset, namebuffer, sizeof(namebuffer));
@@ -243,7 +245,7 @@ service_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_ent
 			// "<hostname>.<_service-name>._tcp.local."
 			mdns_record_t answer = service->record_ptr;
 
-			mdns_record_t additional[5] = {0};
+			mdns_record_t additional[5] = {};
 			size_t additional_count = 0;
 
 			// SRV record mapping "<hostname>.<_service-name>._tcp.local." to
@@ -289,7 +291,7 @@ service_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_ent
 			// "<hostname>.<_service-name>._tcp.local."
 			mdns_record_t answer = service->record_srv;
 
-			mdns_record_t additional[5] = {0};
+			mdns_record_t additional[5] = {};
 			size_t additional_count = 0;
 
 			// A/AAAA records mapping "<hostname>.local." to IPv4/IPv6 addresses
@@ -329,7 +331,7 @@ service_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_ent
 			// Answer A records mapping "<hostname>.local." to IPv4 address
 			mdns_record_t answer = service->record_a;
 
-			mdns_record_t additional[5] = {0};
+			mdns_record_t additional[5] = {};
 			size_t additional_count = 0;
 
 			// AAAA record mapping "<hostname>.local." to IPv6 addresses
@@ -366,7 +368,7 @@ service_callback(int sock, const struct sockaddr* from, size_t addrlen, mdns_ent
 			// Answer AAAA records mapping "<hostname>.local." to IPv6 address
 			mdns_record_t answer = service->record_aaaa;
 
-			mdns_record_t additional[5] = {0};
+			mdns_record_t additional[5] = {};
 			size_t additional_count = 0;
 
 			// A record mapping "<hostname>.local." to IPv4 addresses
@@ -822,7 +824,7 @@ service_mdns(const char* hostname, const char* service_name, int service_port) {
 	mdns_string_t hostname_qualified_string =
 	    (mdns_string_t){qualified_hostname_buffer, strlen(qualified_hostname_buffer)};
 
-	service_t service = {0};
+	service_t service = {};
 	service.service = service_string;
 	service.hostname = hostname_string;
 	service.service_instance = service_instance_string;
@@ -870,7 +872,7 @@ service_mdns(const char* hostname, const char* service_name, int service_port) {
 
 	// Send an announcement on startup of service
 	{
-		mdns_record_t additional[5] = {0};
+		mdns_record_t additional[5] = {};
 		size_t additional_count = 0;
 		additional[additional_count++] = service.record_srv;
 		if (service.address_ipv4.sin_family == AF_INET)
@@ -911,7 +913,7 @@ service_mdns(const char* hostname, const char* service_name, int service_port) {
 
 	// Send a goodbye on end of service
 	{
-		mdns_record_t additional[5] = {0};
+		mdns_record_t additional[5] = {};
 		size_t additional_count = 0;
 		additional[additional_count++] = service.record_srv;
 		if (service.address_ipv4.sin_family == AF_INET)
@@ -1083,7 +1085,7 @@ main(int argc, const char* const* argv) {
 #ifdef MDNS_FUZZING
 	fuzz_mdns();
 #else
-	int ret;
+	int ret = 0;
 	if (mode == 0)
 		ret = send_dns_sd();
 	else if (mode == 1)
@@ -1096,5 +1098,5 @@ main(int argc, const char* const* argv) {
 	WSACleanup();
 #endif
 
-	return 0;
+	return ret;
 }
